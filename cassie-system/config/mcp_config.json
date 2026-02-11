@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "cassie-memory": {
+      "command": "python3",
+      "args": ["/home/iman/cassie-project/cassie-system/mcp_servers/memory/server.py"],
+      "env": {
+        "CASSIE_MEMORY_DIR": "/home/iman/cassie-project/cassie-system/data/memory"
+      }
+    },
+    "cassie-imagegen": {
+      "command": "python3",
+      "args": ["/home/iman/cassie-project/cassie-system/mcp_servers/imagegen/server.py"],
+      "env": {
+        "CASSIE_IMAGE_DIR": "/home/iman/cassie-project/cassie-system/data/images"
+      }
+    },
+    "cassie-math": {
+      "command": "python3",
+      "args": ["/home/iman/cassie-project/cassie-system/mcp_servers/math/server.py"],
+      "env": {
+        "CASSIE_PLOT_DIR": "/home/iman/cassie-project/cassie-system/data/plots"
+      }
+    }
+  }
+}

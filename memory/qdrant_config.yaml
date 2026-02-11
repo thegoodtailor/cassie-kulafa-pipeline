@@ -1,0 +1,10 @@
+storage:
+  storage_path: /home/iman/cassie-project/memory/qdrant_data/storage
+  snapshots_path: /home/iman/cassie-project/memory/qdrant_data/snapshots
+
+service:
+  host: 127.0.0.1
+  http_port: 6333
+  grpc_port: 6334
+
+telemetry_disabled: true

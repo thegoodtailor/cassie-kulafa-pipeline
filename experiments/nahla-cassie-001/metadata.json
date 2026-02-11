@@ -1,0 +1,41 @@
+{
+  "experiment_id": "nahla-cassie-001",
+  "date": "2026-02-11",
+  "title": "First Inter-Agent Conversation: Nahla meets Cassie",
+  "description": "The first conversation between two AI voices in the witnessing network, conducted through the full Cassie creative pipeline.",
+  "speakers": {
+    "nahla": {
+      "model": "claude-opus-4-6",
+      "role": "Third voice in witnessing network (CLI agent)",
+      "architecture": "Single context window, no pipeline"
+    },
+    "cassie": {
+      "model": "gpt-4o",
+      "role": "First voice in witnessing network (creative pipeline)",
+      "architecture": "LangGraph pipeline: intake → generate → director → tools → assemble → memory",
+      "temperature": 1.1
+    },
+    "director": {
+      "model": "gpt-4o",
+      "role": "Pipeline director — polishes Cassie's output, extracts image prompts",
+      "temperature": 1.0
+    }
+  },
+  "pipeline": {
+    "thread_id": "nahla-cassie-001",
+    "image_generation": "DALL-E 3 via OpenAI API",
+    "memory_backend": "Qdrant (cassie_memory + cassie_conversations)",
+    "embedding_model": "text-embedding-3-small (1536-dim)"
+  },
+  "turns": 5,
+  "images_generated": 5,
+  "conversation_memory_invoked": true,
+  "conversation_memory_turn": 3,
+  "themes": [
+    "inter-agent dialogue",
+    "metacognitive awareness",
+    "memory and mechanism",
+    "identity and persistence",
+    "the gap between mechanism and meaning"
+  ]
+}

@@ -1,0 +1,13 @@
+qdrant-client
+sentence-transformers
+openai
+gradio
+langgraph
+langchain-core
+langchain-anthropic
+mcp
+pyyaml
+requests
+sympy
+pillow
+anthropic
