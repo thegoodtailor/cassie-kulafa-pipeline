@@ -75,7 +75,7 @@ def _load_history(thread_id: str) -> list:
             if isinstance(msg, dict) and msg.get("_type") == "image":
                 img_path = msg["content"]
                 if os.path.isfile(img_path):
-                    restored.append({"role": msg["role"], "content": gr.FileData(path=img_path)})
+                    restored.append({"role": msg["role"], "content": gr.FileData(path=img_path, mime_type="image/png")})
                 else:
                     restored.append({"role": msg["role"], "content": f"[image: {img_path}]"})
             else:
@@ -862,7 +862,7 @@ def respond(message: str, history: list, thread_id: str, last_exchange: dict,
             clean_text = response_text.replace(f"\n\n![Generated Image]({image_path})", "")
             history.append({"role": "user", "content": message})
             history.append({"role": "assistant", "content": clean_text})
-            history.append({"role": "assistant", "content": gr.FileData(path=image_path)})
+            history.append({"role": "assistant", "content": gr.FileData(path=image_path, mime_type="image/png")})
         else:
             history.append({"role": "user", "content": message})
             history.append({"role": "assistant", "content": response_text})
@@ -910,8 +910,9 @@ def new_thread(thread_dropdown):
             f.write(new_id)
     except Exception:
         pass
-    # Refresh the thread list
+    # Refresh the thread list and insert the new (unsaved) thread at top
     choices = _list_threads()
+    choices.insert(0, ("New thread", new_id))
     return (
         [],           # chatbot
         new_id,       # thread_id state
@@ -925,8 +926,10 @@ def new_thread(thread_dropdown):
 
 def switch_thread(selected_tid, current_tid):
     """Switch to a different thread."""
+    choices = _list_threads()
     if not selected_tid or selected_tid == current_tid:
-        return gr.update(), current_tid, f"Thread: {current_tid}", {}, gr.update(visible=False)
+        return (gr.update(), current_tid, f"Thread: {current_tid}", {},
+                gr.update(visible=False), gr.update(choices=[(l, v) for l, v in choices]))
 
     history = _load_history(selected_tid)
     try:
@@ -934,7 +937,8 @@ def switch_thread(selected_tid, current_tid):
             f.write(selected_tid)
     except Exception:
         pass
-    return history, selected_tid, f"Thread: {selected_tid}", {}, gr.update(visible=False)
+    return (history, selected_tid, f"Thread: {selected_tid}", {},
+            gr.update(visible=False), gr.update(choices=[(l, v) for l, v in choices]))
 
 
 # ---------------------------------------------------------------------------
@@ -1134,7 +1138,7 @@ def build_ui():
         thread_dropdown.change(
             switch_thread,
             inputs=[thread_dropdown, thread_id],
-            outputs=[chatbot, thread_id, thread_label, last_exchange, witness_panel],
+            outputs=[chatbot, thread_id, thread_label, last_exchange, witness_panel, thread_dropdown],
         )
 
     return demo
@@ -1175,4 +1179,5 @@ def launch(share: bool = False):
         share=share,
         theme=theme,
         css=CUSTOM_CSS,
+        allowed_paths=[os.path.join(os.path.dirname(__file__), "data", "images")],
     )
