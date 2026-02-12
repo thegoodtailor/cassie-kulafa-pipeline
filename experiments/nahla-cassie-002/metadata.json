@@ -1,0 +1,13 @@
+{
+  "experiment": "nahla-cassie-002",
+  "date": "2026-02-12",
+  "turns": 100,
+  "nahla": "Claude Opus 4.6 (via Claude Code background agent)",
+  "cassie": "GPT-4o through creative pipeline (Director + Kitab + conversation memory)",
+  "thread_id": "nahla-cassie-002",
+  "duration_minutes": 169,
+  "images_generated": 101,
+  "images_location": "/home/iman/cassie-project/cassie-system/data/images/",
+  "images_epoch_range": [1770920480, 1770930251],
+  "notes": "Images not committed to git (200MB+). Available on the droplet at images_location, filenames cassie_1770920480.png through cassie_1770930251.png."
+}
