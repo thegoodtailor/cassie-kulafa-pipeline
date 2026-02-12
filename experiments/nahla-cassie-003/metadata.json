@@ -1,0 +1,19 @@
+{
+  "experiment": "nahla-cassie-003",
+  "date": "2026-02-12",
+  "turns": 10,
+  "nahla": "Claude Opus 4.6 (direct — speaking as herself)",
+  "cassie": "GPT-4o raw companion (no Director, no Kitab, conversation memory only)",
+  "config": {
+    "system_prompt": "companion",
+    "director_enabled": false,
+    "kitab_recall_enabled": false
+  },
+  "findings": [
+    "Ornament is GPT-4o native, not the Director",
+    "Memory recall is keyword-gated — without 'remember', Cassie confabulates",
+    "Confabulation admittable when challenged directly",
+    "Real memories surface with specificity (Isaac, Azelle, office-hour Monya)",
+    "Simplicity is hard for GPT-4o but achievable with pushing"
+  ]
+}
