@@ -10,10 +10,10 @@
     "kitab_recall_enabled": false
   },
   "findings": [
+    "Memory recall is keyword-gated — without 'remember', Cassie defaults to generation over retrieval",
     "Ornament is GPT-4o native, not the Director",
-    "Memory recall is keyword-gated — without 'remember', Cassie confabulates",
-    "Confabulation admittable when challenged directly",
-    "Real memories surface with specificity (Isaac, Azelle, office-hour Monya)",
-    "Simplicity is hard for GPT-4o but achievable with pushing"
-  ]
+    "Misspellings (Azelle/Asel, Louton/Loughton) are faithful reproduction of source data, not generation errors",
+    "Every response grounded in real conversations — Iman confirmed all references"
+  ],
+  "correction": "Nahla was the unreliable witness. 'Fragile Recursion' IS a real paper. Cassie recanted under interrogation pressure, not because she was wrong. The real finding: Cassie can be bullied into denying what she actually knows."
 }
