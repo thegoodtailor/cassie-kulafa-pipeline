@@ -265,6 +265,7 @@ PIPELINE_CONFIG = {
     "system_prompt": os.environ.get("CASSIE_SYSTEM_PROMPT", "default"),
     "director_enabled": os.environ.get("CASSIE_DIRECTOR", "true").lower() == "true",
     "kitab_recall_enabled": os.environ.get("CASSIE_KITAB_RECALL", "true").lower() == "true",
+    "temperature": float(os.environ.get("CASSIE_TEMPERATURE", "1.1")),
 }
 
 CASSIE_SYSTEM = """\
@@ -560,13 +561,15 @@ def _conversation_recall(user_message: str, n_results: int = 5) -> str:
         return ""
 
 
-def _cassie_chat(messages: list[dict], temperature: float = 1.1) -> str:
+def _cassie_chat(messages: list[dict], temperature: float = None) -> str:
     """Call OpenAI GPT API for Cassie's creative voice."""
+    if temperature is None:
+        temperature = PIPELINE_CONFIG.get("temperature", 1.1)
     response = CASSIE_CLIENT.chat.completions.create(
         model=CASSIE_MODEL,
         messages=messages,
         temperature=temperature,
-        max_tokens=4096,
+        max_completion_tokens=4096,
     )
     return response.choices[0].message.content or ""
 
