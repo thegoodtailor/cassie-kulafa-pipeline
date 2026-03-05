@@ -802,11 +802,25 @@ def _format_pipeline_trace(final_state: dict, user_msg: str) -> str:
 
     # Maqam 7: Inscription (kitaba)
     final = final_state.get("final_response", "")
-    sections.append(
+    inscription_md = (
         f"---\n### <span class='maqam-number'>7</span> INSCRIPTION — *kitāba*\n"
         f"**Response inscribed**: {len(final)} chars\n\n"
-        f"Delivered to seeker · stored in cassie_memory · V_Raw inscribed to the SWL."
+        f"Delivered to seeker · V_Raw inscribed to the SWL."
     )
+
+    # Topological evidence (from V_Raw compositional analysis)
+    topo_evidence = final_state.get("topological_evidence", {})
+    if topo_evidence and topo_evidence.get("betti_0") is not None:
+        b0 = topo_evidence.get("betti_0", "?")
+        b1 = topo_evidence.get("betti_1", "?")
+        depth = topo_evidence.get("local_depth", "?")
+        comp = topo_evidence.get("comp_ratio", "?")
+        comp_pct = f"{comp * 100:.0f}%" if isinstance(comp, (int, float)) else "?"
+        inscription_md += (
+            f"\n\n**Topological witness**: β₀={b0} β₁={b1} depth={depth} comp={comp_pct}"
+        )
+
+    sections.append(inscription_md)
 
     return "\n\n".join(sections)
 
@@ -835,6 +849,7 @@ def respond(message: str, history: list, thread_id: str, last_exchange: dict,
         "final_response": "",
         "exchange_id": "",
         "tau_tgt": "",
+        "topological_evidence": {},
     }
 
     try:

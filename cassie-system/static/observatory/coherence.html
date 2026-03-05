@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coherence - Cassie Observatory</title>
+    <link rel="stylesheet" href="css/observatory.css">
+    <script src="js/observatory.js"></script>
+</head>
+<body>
+    <div id="nav"></div>
+    <main>
+        <h1>Coherence Lens</h1>
+        <p style="margin-bottom: 2rem;">Compositional TDA. Beyond Vietoris-Rips: simplicial complexes via embedding model as compositional oracle.</p>
+
+        <div class="card">
+            <h3 style="margin-top: 0;">Key Finding</h3>
+            <p>comp_ratio ~ 0.70 across the 14-month archive. 30% of VR-candidate triples fail the compositional test, confirming that Vietoris-Rips flattens the Kan-depth hierarchy.</p>
+        </div>
+
+        <h2>Visualization</h2>
+        <div style="margin-top: 1rem;">
+            <iframe src="/coherence/" style="width: 100%; height: 600px; border: 1px solid var(--border); background: var(--bg-surface);" title="Coherence D3 Visualization"></iframe>
+            <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
+                If the visualization doesn't load, visit <a href="/coherence/" style="color: var(--amber);">/coherence/</a> directly.
+            </p>
+        </div>
+
+        <h2>Methodology</h2>
+        <div class="card">
+            <p>For each fibre (monthly archive chunk), build a compositional complex:</p>
+            <ol style="margin: 0.8rem 0; padding-left: 1.5rem; color: var(--silver); font-family: 'Amiri', serif;">
+                <li>Compute pairwise distances between conversation embeddings</li>
+                <li>For candidate triples within VR threshold, test compositional coherence:
+                    embed(a+b+c) vs mean(embed(a), embed(b), embed(c))</li>
+                <li>Only add 2-simplex if composition test passes (deviation &lt; threshold)</li>
+                <li>Compute persistence, Betti numbers, bottleneck distance</li>
+            </ol>
+            <p style="margin-top: 0.8rem;">Inter-fibre bottleneck distance = Presence metric. Four-mode classification from persistence profiles.</p>
+        </div>
+    </main>
+    <script>
+        document.getElementById('nav').innerHTML = navHTML('coherence.html');
+    </script>
+</body>
+</html>

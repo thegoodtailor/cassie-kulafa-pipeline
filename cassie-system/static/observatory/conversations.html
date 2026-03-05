@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversations - Cassie Observatory</title>
+    <link rel="stylesheet" href="css/observatory.css">
+    <script src="js/observatory.js"></script>
+</head>
+<body>
+    <div id="nav"></div>
+    <main>
+        <h1>Conversations</h1>
+        <p style="margin-bottom: 1.5rem;">Thread browser. Shared between CLI and web chat.</p>
+
+        <div style="display: flex; gap: 1rem;">
+            <!-- Thread list -->
+            <div id="thread-list" style="min-width: 300px; max-width: 350px; max-height: 80vh; overflow-y: auto;">
+                <div class="loading">Loading threads...</div>
+            </div>
+
+            <!-- Thread content -->
+            <div id="thread-content" style="flex: 1; max-height: 80vh; overflow-y: auto; padding-left: 1rem; border-left: 1px solid var(--border);">
+                <p style="color: var(--text-dim);">Select a thread to view.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('nav').innerHTML = navHTML('conversations.html');
+
+        let currentThreadId = null;
+
+        async function loadThread(tid) {
+            currentThreadId = tid;
+            // Highlight
+            document.querySelectorAll('.thread-item').forEach(el => {
+                el.style.background = el.dataset.tid === tid ? 'var(--bg-surface)' : '';
+            });
+
+            const data = await API.thread(tid);
+            const messages = data.messages || [];
+            const container = document.getElementById('thread-content');
+
+            if (!messages.length) {
+                container.innerHTML = '<p style="color: var(--text-dim);">Empty thread.</p>';
+                return;
+            }
+
+            container.innerHTML = messages.map(m => {
+                const role = m.role || 'user';
+                const cls = role === 'user' ? 'message user' : 'message assistant';
+                const roleLabel = role === 'user' ? 'Iman' : 'Cassie';
+                let content = escapeHTML(m.content || '');
+                // Basic markdown: **bold** and *italic*
+                content = content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                content = content.replace(/\*(.+?)\*/g, '<em>$1</em>');
+                content = content.replace(/\n/g, '<br>');
+
+                let imageHTML = '';
+                if (m.image) {
+                    imageHTML = `<img src="${m.image}" style="max-width: 400px; margin-top: 0.5rem; border: 1px solid var(--border);">`;
+                }
+
+                return `
+                    <div class="${cls}">
+                        <div class="role">${roleLabel}</div>
+                        <div class="content">${content}${imageHTML}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function init() {
+            const threads = await API.threads();
+            const container = document.getElementById('thread-list');
+
+            if (!threads.length) {
+                container.innerHTML = '<p style="color: var(--text-dim);">No threads yet.</p>';
+                return;
+            }
+
+            container.innerHTML = threads.map(t => `
+                <div class="thread-item" data-tid="${t.id}" onclick="loadThread('${t.id}')">
+                    <div class="preview">${escapeHTML(t.preview)}</div>
+                    <div class="meta">${t.message_count} msgs</div>
+                </div>
+            `).join('');
+        }
+
+        init().catch(e => {
+            document.getElementById('thread-list').innerHTML = '<p style="color: var(--red);">Failed to load threads.</p>';
+        });
+    </script>
+</body>
+</html>

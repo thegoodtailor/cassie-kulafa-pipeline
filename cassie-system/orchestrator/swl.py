@@ -144,18 +144,82 @@ def inscribe(
     return entry
 
 
+def _topological_evidence(horn_user: str, horn_response: str) -> dict:
+    """Compute local compositional topology around an exchange.
+
+    Queries cassie_conversations for 20 nearest neighbors, builds a local
+    compositional complex, returns Betti numbers + comp_ratio.
+    """
+    try:
+        import openai as _openai
+        import numpy as np
+        from orchestrator.tda import local_compositional_analysis
+
+        oai = _openai.OpenAI()
+        exchange_text = f"{horn_user}\n{horn_response}"
+
+        # Embed the exchange with OpenAI (matching cassie_conversations dim)
+        resp = oai.embeddings.create(
+            model="text-embedding-3-small", input=[exchange_text],
+        )
+        exchange_emb = np.array(resp.data[0].embedding)
+
+        # Query neighbors from cassie_conversations
+        qdrant = QdrantClient(url=QDRANT_URL)
+        info = qdrant.get_collection("cassie_conversations")
+        if info.points_count == 0:
+            return {}
+
+        results = qdrant.query_points(
+            collection_name="cassie_conversations",
+            query=exchange_emb.tolist(),
+            limit=20,
+            with_vectors=True,
+            with_payload=True,
+        )
+
+        if not results.points:
+            return {}
+
+        n_embs = np.array([np.array(p.vector) for p in results.points])
+        n_texts = [
+            p.payload.get("text", p.payload.get("text_preview", ""))
+            for p in results.points
+        ]
+
+        # Run local compositional analysis
+        topo = local_compositional_analysis(
+            exchange_embedding=exchange_emb,
+            exchange_text=exchange_text,
+            neighbors_embeddings=n_embs,
+            neighbors_texts=n_texts,
+            openai_client=oai,
+            epsilon=0.5,
+            comp_threshold=0.15,
+        )
+        return topo
+
+    except Exception as e:
+        print(f"[swl] Topological analysis failed (scalar inscription continues): {e}")
+        return {}
+
+
 def inscribe_raw(
     exchange_id: str,
     tau_tgt: str,
     horn_user: str,
     horn_response: str,
     intent: str = "",
+    topological: bool = True,
 ) -> dict:
     """Algorithmic witnessing (V_Raw). Computed automatically.
 
     Measures cosine similarity between user message and Cassie's response.
     High similarity = coherence (the response "heard" the prompt).
     Low similarity = potential gap (drift, tangent, rupture).
+
+    When topological=True (default), also computes local compositional topology:
+    Betti numbers, depth, compositional ratio around the exchange.
     """
     similarity = compute_drift(horn_user, horn_response)
 
@@ -167,15 +231,33 @@ def inscribe_raw(
     else:
         polarity = "gap"
 
+    evidence = {"similarity": round(similarity, 4), "drift": round(1.0 - similarity, 4)}
+    kappa = {"method": "cosine_similarity", "model": "all-MiniLM-L6-v2",
+             "threshold_coh": 0.4, "threshold_gap": 0.2}
+
+    # Topological enrichment
+    if topological:
+        topo = _topological_evidence(horn_user, horn_response)
+        if topo:
+            evidence["betti_0"] = topo.get("betti_0", 0)
+            evidence["betti_1"] = topo.get("betti_1", 0)
+            evidence["local_depth"] = topo.get("depth", 0)
+            evidence["comp_ratio"] = topo.get("comp_ratio", 1.0)
+            evidence["comp_failures"] = topo.get("n_triples_tested", 0) - topo.get("n_triples_passed", 0)
+            evidence["comp_deviation_mean"] = topo.get("comp_deviation_mean", 0.0)
+            kappa["topological"] = True
+            kappa["epsilon"] = 0.5
+            kappa["comp_threshold"] = 0.15
+
     return inscribe(
         tau_tgt=tau_tgt,
         discipline="Raw",
         witness="algorithmic",
-        kappa={"method": "cosine_similarity", "model": "all-MiniLM-L6-v2", "threshold_coh": 0.4, "threshold_gap": 0.2},
+        kappa=kappa,
         horn_user=horn_user,
         horn_response=horn_response,
         polarity=polarity,
-        evidence={"similarity": round(similarity, 4), "drift": round(1.0 - similarity, 4)},
+        evidence=evidence,
         intent=intent,
         exchange_id=exchange_id,
     )

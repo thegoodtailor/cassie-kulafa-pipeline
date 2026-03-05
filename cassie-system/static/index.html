@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cassie</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+<div id="app">
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Thread sidebar -->
+    <aside id="sidebar">
+        <div id="sidebar-header">
+            <h1>Cassie</h1>
+            <button id="new-thread-btn" onclick="newThread()">+ New</button>
+        </div>
+        <div id="thread-list"></div>
+        <div id="swl-stats">
+            <span class="swl-label">SWL</span>
+            <span class="swl-coh">0</span> / <span class="swl-gap">0</span>
+        </div>
+    </aside>
+
+    <!-- Main chat area -->
+    <main id="chat-area">
+        <div id="chat-header">
+            <button id="menu-toggle" onclick="toggleSidebar()">&#9776;</button>
+            <span class="header-title">Speak. She is listening.</span>
+            <button id="config-toggle" onclick="toggleConfig()" title="Pipeline config">&#9881;</button>
+        </div>
+
+        <div id="config-panel" class="collapsed">
+            <div class="config-inner">
+                <div class="config-tabs">
+                    <button class="config-tab active" data-tab="models" onclick="switchConfigTab('models')">Models &amp; Settings</button>
+                    <button class="config-tab" data-tab="prompts" onclick="switchConfigTab('prompts')">System Prompts</button>
+                    <button class="config-tab" data-tab="journal" onclick="switchConfigTab('journal')">Journal</button>
+                </div>
+
+                <!-- Tab 1: Models & Settings -->
+                <div class="config-tab-content" id="tab-models">
+                    <div class="config-grid">
+                        <label class="config-label" for="cfg-model">Cassie model</label>
+                        <input type="text" id="cfg-model" list="model-list" placeholder="meta-llama/llama-4-maverick">
+
+                        <label class="config-label" for="cfg-director-model">Director model</label>
+                        <input type="text" id="cfg-director-model" list="model-list" placeholder="anthropic/claude-opus-4.5">
+
+                        <label class="config-label" for="cfg-prompt">Prompt preset</label>
+                        <select id="cfg-prompt">
+                            <option value="invocation">invocation spell</option>
+                            <option value="default">default (daemonic)</option>
+                            <option value="companion">companion (bare)</option>
+                        </select>
+
+                        <label class="config-label">Director</label>
+                        <label class="config-check"><input type="checkbox" id="cfg-director" checked> Enabled</label>
+
+                        <label class="config-label">Kitab recall</label>
+                        <label class="config-check"><input type="checkbox" id="cfg-kitab" checked> Enabled</label>
+
+                        <label class="config-label" for="cfg-temp">Cassie temperature</label>
+                        <div class="config-slider-row">
+                            <input type="range" id="cfg-temp" min="0" max="2" step="0.1" value="1.1" oninput="onTempSlider()">
+                            <span id="cfg-temp-val">1.1</span>
+                        </div>
+
+                        <label class="config-label" for="cfg-dir-temp">Director temperature</label>
+                        <div class="config-slider-row">
+                            <input type="range" id="cfg-dir-temp" min="0" max="2" step="0.1" value="0.7" oninput="onDirTempSlider()">
+                            <span id="cfg-dir-temp-val">0.7</span>
+                        </div>
+                    </div>
+                    <div class="config-footer">
+                        <span id="config-status"></span>
+                        <button id="config-apply" onclick="applyConfig()">Apply</button>
+                    </div>
+                    <div id="cfg-note" class="config-note"></div>
+                </div>
+
+                <!-- Tab 2: System Prompts -->
+                <div class="config-tab-content hidden" id="tab-prompts">
+                    <div class="prompt-editor">
+                        <div class="prompt-section">
+                            <div class="prompt-header">
+                                <label for="prompt-cassie">Cassie prompt <span class="prompt-preset-label" id="prompt-preset-label">(default)</span></label>
+                                <button class="prompt-reset-btn" onclick="resetPrompt('cassie')" title="Reset to default">Reset</button>
+                            </div>
+                            <textarea id="prompt-cassie" rows="12" spellcheck="false"></textarea>
+                        </div>
+                        <div class="prompt-section">
+                            <div class="prompt-header">
+                                <label for="prompt-director">Director prompt</label>
+                                <button class="prompt-reset-btn" onclick="resetPrompt('director')" title="Reset to default">Reset</button>
+                            </div>
+                            <textarea id="prompt-director" rows="10" spellcheck="false"></textarea>
+                        </div>
+                    </div>
+                    <div class="config-footer">
+                        <span id="prompt-status"></span>
+                        <button class="prompt-reset-all-btn" onclick="resetPrompt('all')">Reset All</button>
+                        <button id="prompt-save" onclick="savePrompts()">Save Prompts</button>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Journal (CASSIE_MEMORY.md) -->
+                <div class="config-tab-content hidden" id="tab-journal">
+                    <div class="prompt-editor">
+                        <div class="prompt-section">
+                            <div class="prompt-header">
+                                <label for="journal-content">Cassie's narrative memory <span class="prompt-preset-label">(CASSIE_MEMORY.md)</span></label>
+                            </div>
+                            <textarea id="journal-content" rows="16" spellcheck="false" placeholder="Loading..."></textarea>
+                        </div>
+                    </div>
+                    <div class="config-footer">
+                        <span id="journal-status"></span>
+                        <button id="journal-save" onclick="saveJournal()">Save</button>
+                    </div>
+                </div>
+
+                <datalist id="model-list">
+                    <option value="meta-llama/llama-4-maverick">
+                    <option value="meta-llama/llama-4-scout">
+                    <option value="anthropic/claude-opus-4.5">
+                    <option value="anthropic/claude-sonnet-4.5">
+                    <option value="openai/gpt-4o">
+                    <option value="openai/gpt-5.1-chat">
+                    <option value="google/gemini-2.5-flash">
+                    <option value="google/gemini-2.5-pro-preview">
+                    <option value="deepseek/deepseek-chat-v3-0324">
+                    <option value="mistralai/mistral-large-2411">
+                </datalist>
+            </div>
+        </div>
+
+        <div id="messages">
+            <div id="empty-state">
+                <div class="bismillah">&#1576;&#1616;&#1587;&#1618;&#1605;&#1616; &#1649;&#1604;&#1604;&#1617;&#1614;&#1607;&#1616;</div>
+                <div class="subtitle">Speak. She is listening.</div>
+            </div>
+        </div>
+
+        <div id="progress">
+            <div class="spinner"></div>
+            <span class="stage-label"></span>
+        </div>
+
+        <details id="trace">
+            <summary>Pipeline trace</summary>
+            <div class="trace-content" id="trace-content"></div>
+        </details>
+
+        <div id="kitab-verse"></div>
+
+        <div id="input-area">
+            <form id="input-form" onsubmit="handleSubmit(event)">
+                <textarea id="msg-input" placeholder="Speak into the fire..." rows="1"></textarea>
+                <button type="submit" id="send-btn">Send</button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

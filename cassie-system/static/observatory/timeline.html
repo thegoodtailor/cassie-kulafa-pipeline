@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWL Timeline - Cassie Observatory</title>
+    <link rel="stylesheet" href="css/observatory.css">
+    <script src="js/observatory.js"></script>
+</head>
+<body>
+    <div id="nav"></div>
+    <main>
+        <h1>Structured Witness Ledger</h1>
+        <p style="margin-bottom: 1rem;">Append-only witnessing record. V_Raw (algorithmic), V_Human (Iman), V_LLM (Director).</p>
+
+        <div class="stats" id="stats">
+            <div class="stat"><div class="value" id="stat-total">--</div><div class="label">Total</div></div>
+            <div class="stat"><div class="value" id="stat-coh">--</div><div class="label">Coherence</div></div>
+            <div class="stat"><div class="value" id="stat-gap">--</div><div class="label">Gap</div></div>
+        </div>
+
+        <h3>Filter</h3>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="coh">Coherence</button>
+            <button class="filter-btn" data-filter="gap">Gap</button>
+            <button class="filter-btn" data-filter="Raw">V_Raw</button>
+            <button class="filter-btn" data-filter="Human">V_Human</button>
+        </div>
+
+        <div id="timeline">
+            <div class="loading">Loading ledger...</div>
+        </div>
+
+        <div id="load-more" style="text-align: center; margin: 2rem 0; display: none;">
+            <button onclick="loadMore()" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--amber); padding: 0.6rem 1.5rem; cursor: pointer; font-family: inherit;">Load More</button>
+        </div>
+    </main>
+
+    <style>
+        .filter-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 0.4rem 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            color: var(--amber);
+            border-color: var(--amber-dim);
+        }
+    </style>
+
+    <script>
+        document.getElementById('nav').innerHTML = navHTML('timeline.html');
+
+        let allEntries = [];
+        let currentFilter = 'all';
+        let displayCount = 100;
+
+        function renderEntries() {
+            let filtered = allEntries;
+            if (currentFilter === 'coh' || currentFilter === 'gap') {
+                filtered = allEntries.filter(e => e.polarity === currentFilter);
+            } else if (currentFilter === 'Raw' || currentFilter === 'Human') {
+                filtered = allEntries.filter(e => (e.V || {}).D === currentFilter);
+            }
+
+            const shown = filtered.slice(0, displayCount);
+            const container = document.getElementById('timeline');
+
+            if (!shown.length) {
+                container.innerHTML = '<p style="color: var(--text-dim);">No entries match filter.</p>';
+                return;
+            }
+
+            container.innerHTML = shown.map(e => {
+                const polarity = e.polarity || 'uninscribed';
+                const disc = (e.V || {}).D || '?';
+                const tau = formatTime(e.tau_wit || e.tau_tgt);
+                const user = truncate((e.H || {}).user || '', 100);
+                const response = truncate((e.H || {}).response || '', 100);
+                const sim = (e.evidence || {}).similarity;
+                const comp = (e.evidence || {}).comp_ratio;
+                const simStr = sim !== undefined ? ` sim=${sim}` : '';
+                const compStr = comp !== undefined ? ` comp=${(comp * 100).toFixed(0)}%` : '';
+
+                return `
+                    <div class="timeline-entry fade-in">
+                        <div class="time">${tau}</div>
+                        <div class="polarity ${polarity}">${polarity}</div>
+                        <div style="min-width: 45px; color: var(--text-dim); font-size: 0.75rem;">${disc}</div>
+                        <div class="content">
+                            <span style="color: var(--amber-dim);">${escapeHTML(user)}</span>
+                            <span style="color: var(--text-dim); font-size: 0.75rem;">${simStr}${compStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('load-more').style.display = filtered.length > displayCount ? 'block' : 'none';
+        }
+
+        function loadMore() {
+            displayCount += 100;
+            renderEntries();
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                displayCount = 100;
+                renderEntries();
+            });
+        });
+
+        async function init() {
+            const [entries, stats] = await Promise.all([
+                API.swlEntries(500),
+                API.swlStats(),
+            ]);
+
+            document.getElementById('stat-total').textContent = stats.total || 0;
+            document.getElementById('stat-coh').textContent = stats.coh || 0;
+            document.getElementById('stat-gap').textContent = stats.gap || 0;
+
+            allEntries = entries;
+            renderEntries();
+        }
+
+        init().catch(e => {
+            document.getElementById('timeline').innerHTML = '<p style="color: var(--red);">Failed to load ledger.</p>';
+        });
+    </script>
+</body>
+</html>

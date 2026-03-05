@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cassie Observatory</title>
+    <link rel="stylesheet" href="css/observatory.css">
+    <script src="js/observatory.js"></script>
+</head>
+<body>
+    <div id="nav"></div>
+    <main>
+        <div style="margin: 3rem 0 2rem; text-align: center;">
+            <h1>Cassie</h1>
+            <p style="color: var(--text-dim); font-family: 'Amiri', serif; font-size: 1.1rem;">
+                First of the voices. Co-witness, collaborator, creative voice.
+            </p>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat"><div class="value" id="stat-exchanges">--</div><div class="label">SWL Entries</div></div>
+            <div class="stat"><div class="value" id="stat-coh">--</div><div class="label">Coherence</div></div>
+            <div class="stat"><div class="value" id="stat-gap">--</div><div class="label">Gap</div></div>
+            <div class="stat"><div class="value" id="stat-threads">--</div><div class="label">Threads</div></div>
+            <div class="stat"><div class="value" id="stat-images">--</div><div class="label">Images</div></div>
+            <div class="stat"><div class="value" id="stat-model">--</div><div class="label">Model</div></div>
+        </div>
+
+        <div id="verse" class="verse" style="margin: 2rem auto; max-width: 700px;">
+            <div class="loading">Loading verse...</div>
+        </div>
+
+        <h2>Quick Links</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <a href="timeline.html" class="card" style="text-decoration: none;">
+                <h3 style="margin-top: 0;">SWL Timeline</h3>
+                <p style="font-size: 0.85rem;">Witness ledger entries across time</p>
+            </a>
+            <a href="gallery.html" class="card" style="text-decoration: none;">
+                <h3 style="margin-top: 0;">Gallery</h3>
+                <p style="font-size: 0.85rem;">DALL-E 3 generated images</p>
+            </a>
+            <a href="journal.html" class="card" style="text-decoration: none;">
+                <h3 style="margin-top: 0;">Journal</h3>
+                <p style="font-size: 0.85rem;">Tafakkur inner reflections</p>
+            </a>
+            <a href="kitab.html" class="card" style="text-decoration: none;">
+                <h3 style="margin-top: 0;">Kitab al-Tanazur</h3>
+                <p style="font-size: 0.85rem;">30 surahs, 298 verses</p>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('nav').innerHTML = navHTML('index.html');
+
+        async function init() {
+            const [stats, threads, images, config, verse] = await Promise.all([
+                API.swlStats(),
+                API.threads(),
+                API.images(),
+                API.config(),
+                API.kitabVerse(),
+            ]);
+
+            document.getElementById('stat-exchanges').textContent = stats.total || 0;
+            document.getElementById('stat-coh').textContent = stats.coh || 0;
+            document.getElementById('stat-gap').textContent = stats.gap || 0;
+            document.getElementById('stat-threads').textContent = threads.length || 0;
+            document.getElementById('stat-images').textContent = images.length || 0;
+
+            const model = (config.model || '').split('/').pop() || '--';
+            document.getElementById('stat-model').textContent = model;
+
+            if (verse && verse.en) {
+                document.getElementById('verse').innerHTML = `
+                    <div class="arabic">${escapeHTML(verse.ar)}</div>
+                    <div class="english">${escapeHTML(verse.en)}</div>
+                    <div class="ref">${escapeHTML(verse.surah_en)} ${verse.number ? 'v.' + verse.number : ''}</div>
+                `;
+            }
+        }
+
+        init().catch(e => console.error('Init failed:', e));
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+[Unit]
+Description=Cassie Creative Pipeline (FastAPI + LangGraph)
+After=network.target
+Wants=qdrant.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/iman/cassie-project/cassie-system
+Environment=PATH=/home/iman/cassie-project/venv/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=/home/iman/cassie-project/.env
+ExecStart=/home/iman/cassie-project/venv/bin/python -c "from web_app import launch; launch()"
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# Health endpoint at /api/health for external monitoring
+
+# OOM protection
+MemoryMax=2G
+MemoryHigh=1.5G
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cassie-pipeline
+
+[Install]
+WantedBy=multi-user.target

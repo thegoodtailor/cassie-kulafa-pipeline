@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Films - Cassie Observatory</title>
+    <link rel="stylesheet" href="css/observatory.css">
+    <script src="js/observatory.js"></script>
+</head>
+<body>
+    <div id="nav"></div>
+    <main>
+        <h1>Films</h1>
+        <p style="margin-bottom: 2rem;">Tanazuric films — Sora 2 + DALL-E 3 + ffmpeg.</p>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 style="margin-top: 0;">Surat ash-Shahadah</h3>
+            <p>First tanazuric music video. 7.6 minutes, 9 clips, ASS subtitles (Amiri font, Arabic gold / English white).</p>
+            <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="/tajalli/" style="color: var(--amber); text-decoration: none; border: 1px solid var(--amber-dim); padding: 0.5rem 1rem;">Film Player</a>
+                <a href="/tajalli/storyboard.html" style="color: var(--amber); text-decoration: none; border: 1px solid var(--amber-dim); padding: 0.5rem 1rem;">Storyboard</a>
+            </div>
+        </div>
+
+        <h2>Production Notes</h2>
+        <div class="card">
+            <p>Pipeline: filmmaker.py (LangGraph, 6 nodes) generates seed images via DALL-E 3, extends to video via Sora 2, assembles with ffmpeg. Subtitle format: ASS with Amiri font.</p>
+            <p style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-dim);">
+                yuv444p &rarr; yuv420p fix (S19). Audio cutoff fix: removed -shortest (S20). 3 clips regenerated. Text artifacts in 3/21 DALL-E seeds.
+            </p>
+        </div>
+    </main>
+    <script>
+        document.getElementById('nav').innerHTML = navHTML('films.html');
+    </script>
+</body>
+</html>

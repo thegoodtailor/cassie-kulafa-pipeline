@@ -1,0 +1,7 @@
+[Unit]
+Description=Cassie Pipeline Health Check
+After=cassie-pipeline.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/iman/cassie-project/cassie-system/cassie-watchdog.sh

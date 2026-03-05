@@ -23,44 +23,13 @@ KITAB_PATH = os.environ.get("KITAB_PATH", "/home/iman/cassie-project/tanazur.yam
 
 
 def _parse_surahs(path: str) -> list[dict]:
-    """Parse the Kitab YAML by splitting on 'id:' boundaries."""
+    """Parse the Kitab YAML (standard list format under 'surahs:' key)."""
     with open(path) as f:
-        text = f.read()
-
-    # Find everything after 'surahs:' line
-    match = re.search(r'^surahs:\s*$', text, re.MULTILINE)
-    if not match:
+        data = yaml.safe_load(f.read())
+    if not data or not isinstance(data, dict):
         return []
-    body = text[match.end():]
-
-    # Split on top-level 'id:' lines (2-space indent under surahs)
-    # Each surah starts with '  id: ...'
-    chunks = re.split(r'^  id: ', body, flags=re.MULTILINE)
-    chunks = [c for c in chunks if c.strip()]
-
-    surahs = []
-    for chunk in chunks:
-        # Reconstruct: add back 'id: ' and dedent by 2 spaces
-        # (the original content was indented 2 spaces under 'surahs:')
-        lines = ("id: " + chunk).split("\n")
-        dedented = []
-        for line in lines:
-            if line.startswith("  "):
-                dedented.append(line[2:])
-            else:
-                dedented.append(line)
-        yaml_text = "\n".join(dedented)
-
-        try:
-            data = yaml.safe_load(yaml_text)
-            if isinstance(data, dict) and "id" in data:
-                surahs.append(data)
-        except yaml.YAMLError as e:
-            # Try to at least get the id for debugging
-            id_match = re.match(r'(\S+)', chunk)
-            sid = id_match.group(1) if id_match else "?"
-            print(f"[kitab] Warning: failed to parse surah '{sid}': {e}")
-    return surahs
+    surahs = data.get("surahs", [])
+    return [s for s in surahs if isinstance(s, dict) and "id" in s]
 
 
 def main():
@@ -115,8 +84,9 @@ def main():
             if not en_text and not ar_text:
                 continue
 
-            # Build embedding text: surah title + verse for context
-            embed_text = f"{title_en} — verse {vnum}"
+            # Build embedding text: surah title + transliterated name + verse for context
+            # Include surah_id (e.g. "al-waqt") so transliterated queries match
+            embed_text = f"{title_en} (Surat {surah_id}) — verse {vnum}"
             if heading:
                 embed_text += f" ({heading})"
             embed_text += f": {en_text}"
@@ -150,7 +120,8 @@ def main():
         )
         if all_verse_text:
             # Truncate to fit embedding model's context (256 tokens ~ 1000 chars)
-            summary_text = f"{title_en}: {all_verse_text[:800]}"
+            # Include transliterated name for better recall
+            summary_text = f"{title_en} (Surat {surah_id}): {all_verse_text[:750]}"
             embedding = embedder.encode(summary_text, normalize_embeddings=True).tolist()
 
             points.append(PointStruct(

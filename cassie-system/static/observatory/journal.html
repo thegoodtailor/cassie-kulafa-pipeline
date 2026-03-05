@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal - Cassie Observatory</title>
+    <link rel="stylesheet" href="css/observatory.css">
+    <script src="js/observatory.js"></script>
+</head>
+<body>
+    <div id="nav"></div>
+    <main>
+        <h1>Tafakkur</h1>
+        <p style="margin-bottom: 1.5rem;">Inner monologue. Private reflections after exchanges.</p>
+
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search reflections..." onkeydown="if(event.key==='Enter')doSearch()">
+            <button onclick="doSearch()">Search</button>
+        </div>
+
+        <div id="search-results" style="display: none; margin-bottom: 2rem;">
+            <h3>Search Results</h3>
+            <div id="search-content"></div>
+            <button onclick="clearSearch()" style="margin-top: 0.5rem; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.8rem;">Clear search</button>
+        </div>
+
+        <div id="entries">
+            <div class="loading">Loading journal...</div>
+        </div>
+
+        <h2 style="margin-top: 3rem;">Narrative Memory</h2>
+        <div id="narrative" class="card" style="white-space: pre-wrap;">
+            <div class="loading">Loading...</div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('nav').innerHTML = navHTML('journal.html');
+
+        async function doSearch() {
+            const q = document.getElementById('search-input').value.trim();
+            if (!q) return;
+            const data = await API.tafakkurSearch(q);
+            const container = document.getElementById('search-content');
+            const results = data.results || '';
+            if (results) {
+                container.innerHTML = `<div class="card"><pre style="white-space: pre-wrap; font-size: 0.85rem; color: var(--silver);">${escapeHTML(results)}</pre></div>`;
+            } else {
+                container.innerHTML = '<p style="color: var(--text-dim);">No matching reflections.</p>';
+            }
+            document.getElementById('search-results').style.display = 'block';
+        }
+
+        function clearSearch() {
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('search-input').value = '';
+        }
+
+        async function init() {
+            const [entries, journal] = await Promise.all([
+                API.tafakkurEntries(50),
+                API.journal(),
+            ]);
+
+            const container = document.getElementById('entries');
+            if (!entries.length) {
+                container.innerHTML = '<p style="color: var(--text-dim);">No tafakkur entries yet. They appear after exchanges with Cassie.</p>';
+            } else {
+                container.innerHTML = entries.map(e => {
+                    const isDeep = e.depth === 'deep';
+                    const cls = isDeep ? 'journal-entry deep fade-in' : 'journal-entry fade-in';
+                    const depthTag = isDeep ? '<span class="depth-tag">deep</span>' : '';
+                    return `
+                        <div class="${cls}">
+                            <div class="timestamp">${formatTime(e.tau_reflect)}${depthTag}</div>
+                            <div class="text">${escapeHTML(e.content)}</div>
+                            ${e.user_excerpt ? `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim);">Re: ${escapeHTML(truncate(e.user_excerpt, 100))}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const narrative = journal.content || '';
+            document.getElementById('narrative').innerHTML = narrative
+                ? `<div class="prose" style="font-size: 0.9rem; white-space: pre-wrap;">${escapeHTML(narrative)}</div>`
+                : '<p style="color: var(--text-dim);">No narrative memory loaded.</p>';
+        }
+
+        init().catch(e => {
+            document.getElementById('entries').innerHTML = '<p style="color: var(--red);">Failed to load journal.</p>';
+        });
+    </script>
+</body>
+</html>

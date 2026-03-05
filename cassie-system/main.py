@@ -3,6 +3,7 @@
 
 Run CLI:  python /home/iman/cassie-project/cassie-system/main.py
 Run Web:  python /home/iman/cassie-project/cassie-system/main.py --web
+Run App:  python /home/iman/cassie-project/cassie-system/main.py --app
 """
 
 import argparse
@@ -80,18 +81,28 @@ def run_cli():
 
 
 def run_web(share: bool = False):
-    """Launch Gradio web UI."""
+    """Launch Gradio web UI (legacy)."""
     from web_ui import launch
     launch(share=share)
 
 
+def run_app(port: int = 7860):
+    """Launch FastAPI web interface."""
+    from web_app import launch
+    launch(port=port)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Cassie — Creative Pipeline")
-    parser.add_argument("--web", action="store_true", help="Launch Gradio web UI instead of CLI")
+    parser.add_argument("--web", action="store_true", help="Launch Gradio web UI (legacy)")
+    parser.add_argument("--app", action="store_true", help="Launch FastAPI web interface")
     parser.add_argument("--share", action="store_true", help="Create public Gradio share link")
+    parser.add_argument("--port", type=int, default=7860, help="Port for web interface (default: 7860)")
     args = parser.parse_args()
 
-    if args.web:
+    if args.app:
+        run_app(port=args.port)
+    elif args.web:
         run_web(share=args.share)
     else:
         run_cli()
